@@ -49,9 +49,10 @@
 				<h2 ng-if=(prompt.text).slice(-1)!="=" id = "ideaName"> {{prompt.text}}</h2>
 				<img ng-if=(prompt.text).slice(-1)=="=" data-ng-src = {{prompt.text}}>
 				<br>
-					<div ng-repeat="idea in prompt.ideas" class = "ideaBox">
+					<div ng-repeat="idea in prompt.ideas" class = "ideaBox" ng-style="idea.refrenced === 0 && {'background-color': 'lightblue'} || idea.refrenced === 1 && {'background-color': 'green'}">
 						<h2 id = "ideaName"> {{idea.name}}</h2>
 						<p class = "likes" ng-click="newLike(idea.ID)">+ {{ idea.likes }} </p>
+						<input type="button" id="submit" value="Refrence"  ng-click= "sendRefrence(idea)"/>
 						<!--Load textcontent -->
 							<div class = "contentBox" ng-if=idea.contentType=="text">
 								<p id = "ideaText"> {{idea.content}} </p>
@@ -60,13 +61,18 @@
 							<div class = "contentBox" ng-if=idea.contentType=="image">
 								<img data-ng-src={{idea.content}} style="max-width:100%; max-height:100%">
 							</div>
+							<div class = "refrenceBox" style="overflow: scroll ;max-height: 250px;font-size:11px;" >
+								 <p id="ideaRefrenced" ng-mouseover = "showRefrence(idea)" ng-mouseleave = "resetRefrence(idea)">{{"Refrence:" + idea.refrence}} <p/>
+
+									
+							</div>
 
 						<p id = "ideaTime"> {{idea.time | date:'MM-dd-yyyy HH:mm'}} </p>
 					</div>
 					<div class = "newIdeaBox">
 						<h2 id = "ideaName"> Add New Idea </h2>
 							<form name="newIdea_frm" id = "newIdea_frm" novalidate class="simple-form">
-								<input type="text" ng-model="newIdea.name" id = "ideaName" placeholder="Name"/><br />
+								<input type="text" ng-model="newIdea.name" id = "ideaName" placeholder="Name" /><br />
 								<br>
 							<p>What idea type would you like to share?</p>
 					      		<label for="textButton">Text</label>
@@ -79,10 +85,13 @@
 					      		<input type="text" ng-model="newIdea.content" id = "ideaName" placeholder="Idea content here" ng-show="newIdea.contentType == 'text'"/><br />
 					      		<input type="url" ng-model="newIdea.content" id = "ideaName" placeholder="Image url here" ng-show="newIdea.contentType == 'image'"/><br />
 					    	</div>
+					    	<div ><input type = "text" ng-model="$parent.newIdeaRefrence" id="ideaRefrence" placeholder="Refrences here" ng-change ="editRefrence(newIdeaRefrence)"/></div>
 
 					    	<input type="hidden" ng-model="newIdea.promptID" value="{{prompt.promptID}}" ng-init="newIdea.ID=prompt.promptID"/>
 					    	
 					    	<input type="submit" ng-show="newIdea_frm.$dirty" ng-click="addIdea(newIdea)" value="Save" />
+					    	<input type='text' ng-model='id' ng-change="logId(id)">
+  							 <!--<button ng-click="logId(id)">Log ID</button>-->
 					    	</form>
 					    	<br>
 					    	<div class = "results" ng-show = "showAddNewIdea">

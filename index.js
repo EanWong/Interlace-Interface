@@ -406,6 +406,9 @@ var currentSession = "57a8a1ca7909460733f208b2";
         res.send("Please include your idea's content.");
         return;
       }
+      if(!('refrence' in req.body)){
+        res.send("please include your refrence");
+      }
       if (!('likes' in req.body)){
         req.body['likes'] = 0;
         console.log(req.body);
@@ -917,6 +920,7 @@ Returns sessionID:
           officialIdea['time'] = Date.now();
           officialIdea['contentType'] = req.body.contentType;
           officialIdea['content'] = req.body.content;
+          officialIdea['refrence'] = req.body.refrence;
           officialIdea['likes'] = 0;
 
           //console.log(officialIdea);
