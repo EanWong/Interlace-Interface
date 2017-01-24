@@ -85,10 +85,13 @@ angularApp.controller("InterfaceController",
 		$http.post('/api2/sessions/' + sessionID, body).then(function(response){
 			console.log("response of archiving a session");
 			console.log(response.data);
+
+			var updated_session = response.data;
+
 			//($scope.allSessions) = (response.data);
 
 			//Update all clients
-			//socket.emit('updateSessions');
+			socket.emit('updateSessions', updated_session);
 		});
 	};
 
@@ -101,10 +104,12 @@ angularApp.controller("InterfaceController",
 		$http.post('/api2/sessions/' + sessionID, body).then(function(response){
 			console.log("response of archiving a session");
 			console.log(response.data);
+
+			var updated_session = response.data;
 			//($scope.allSessions) = (response.data);
 
 			//Update all clients
-			//socket.emit('updateSessions');
+			socket.emit('updateSessions', updated_session);
 		});
 	};
 
@@ -159,9 +164,10 @@ angularApp.controller("InterfaceController",
 			else{
 				$("#newSession_frm")[0].reset();
 				//Receiving new session and pushing to sessions array
-				($scope.allSessions).push(response.data);
+				//($scope.allSessions).push(response.data);
+				var newSession = response.data;
 				//Update all clients
-				//socket.emit('updateSessions');
+				socket.emit('updateSessions', newSession);
 
 				$scope.showAddNewSession = true;
 				$scope.showErrorAddNewSession = false;
@@ -171,15 +177,46 @@ angularApp.controller("InterfaceController",
 
 	};
 	//socket.emit and socket.on must be declared in separate functions
-	socket.on('updateSessions', function(){
-		$http.get('/getAllSessionData/').then(function(response){
+	socket.on('updateSessions', function(updatedSession){
+		$scope.updateScopeSessions(updatedSession);
+		/*$http.get('/getAllSessionData/').then(function(response){
 			//console.log(response.data);
 			$scope.allSessions = response.data;
-		});
+		});*/
 	});
 
-	//Set current session
+	$scope.updateScopeSessions = function(updatedSession) {
+
+		var sessionID = updatedSession._id;
+
+		var addSession = true;
+		for (var i = 0; i < this.allSessions.length; i++) {
+			if (sessionID == this.allSessions[i]._id) {
+				console.log("Trying to update session");
+				addSession = false;
+				Object.assign(this.allSessions[i], updatedSession);
+			} 
+			//has checked every session id for a match, and has not found a match
+			if (i == this.allSessions.length - 1 && addSession == true) {
+				console.log("Trying to add new session");
+				this.allSessions.push(updatedSession);
+			}
+		} 
+
+		if (this.allSessions.length == 0) {
+			console.log("Trying to add new session");
+			this.allSessions.push(updatedSession);
+		}
+
+		console.log(this.allSessions);
+
+	}
+
+	//Set current session, 1/24/17 will eventually need to be changed to allow better for cookies
 	$scope.useSession = function(inputtedSession){
+
+		console.log("useSession enabled");
+		console.log(inputtedSession);
 		$http.post('/setSession',inputtedSession).then(function(response){
 		});
 	};

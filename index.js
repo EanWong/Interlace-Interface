@@ -216,7 +216,7 @@ var currentSession = "57a8a1ca7909460733f208b2";
     });
   });
 
-  //Set current session to use
+  //Set current session to use, 1/24/17 this needs to eventually be replaced by coopkies
   expressApp.post('/setSession', function(req, res){
     var sessionID = req.body._id;
     currentSession = sessionID;
