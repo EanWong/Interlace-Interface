@@ -13,6 +13,7 @@ var io = require('socket.io')(http);
 var path = require('path');
 var bodyParser = require('body-parser');
 var util = require('util');
+var api2 = require('./routes/api2');
 
 expressApp.use(bodyParser.json());
 expressApp.use(bodyParser.urlencoded({
@@ -22,7 +23,7 @@ expressApp.use(bodyParser.urlencoded({
 expressApp.use(express.static(path.join(__dirname, '/public'))); //Add CSS
 expressApp.use('/js', express.static(path.join(__dirname,'/js'))); //Add controller, data
 expressApp.use('/lib', express.static(path.join(__dirname,'/lib'))); //Add Angular and socket
-
+expressApp.use('/api2',api2);
 //Connect with socket.io between Angular App (controllers.js) and Express App (index.js)
 io.on('connection', function(socket){
   socket.on('updateAll', function(ideaObject){
@@ -135,6 +136,7 @@ var currentSession = "57a8a1ca7909460733f208b2";
   //Save incoming JSON object as document in database
   //If the incoming session title is unique, returns the newly created document
   //Error message if a session with this title already exists
+  /*
   expressApp.post('/addNewSession', function(req, res){
       if (!('sessionID' in req.body)){
          MongoClient.connect(url, function(err, db) {
@@ -200,7 +202,7 @@ var currentSession = "57a8a1ca7909460733f208b2";
       });
     })
   });
-
+  */
   //Returns all documents in collection
   expressApp.get('/getAllSessionData', function(req, res){
     MongoClient.connect(url, function(err, db) {

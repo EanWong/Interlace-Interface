@@ -37,6 +37,15 @@ angularApp.controller("InterfaceController",
 {    
 
 //Setting scope variables, general set-up
+	//var arrayRefrences = [];
+	$scope.newIdeaRefrence = "";
+	//$scope.IdeaRefrence="";
+	
+	$scope.logId = function(ideaaaa) {
+		$scope.id=ideaaaa;
+        console.log($scope.id);
+    }
+
 	var vm = this;
 
 	$scope.$route = $route;
@@ -114,16 +123,17 @@ angularApp.controller("InterfaceController",
 		
 		//Create full session (with all attributes) to be inputted in database
 		var fullNewSession = {
-			"sessionID":$scope.allSessions.length + 1,
+			//"sessionID":$scope.allSessions.length + 1,
 			"title":newSession.title,
 			"teacherName":newSession.teacherName,
 			"date":newSession.date,
-			"prompts":[],
-			"visible":true
+			//"prompts":[],
+			//"visible":true
 		};
+		console.log('add session!');
 
 		//Post full session to node app, which will connect with mongoDB
-		$http.post('/addNewSession',fullNewSession).then(function(response){
+		$http.post('/api2/sessions',fullNewSession).then(function(response){
 			//If this session already exists within the database, the node app will send back
 			//the error message '!ERROR!'.  As of now, it is crucial to have unique session titles
 			//because the program gets sessionIDs by searching by session title
@@ -137,13 +147,14 @@ angularApp.controller("InterfaceController",
 				//Receiving new session and pushing to sessions array
 				($scope.allSessions).push(response.data);
 				//Update all clients
-				socket.emit('updateSessions');
+				//socket.emit('updateSessions');
 
 				$scope.showAddNewSession = true;
 				$scope.showErrorAddNewSession = false;
 				$scope.addNewSessionResponse = "Your session has been submitted.";
 			}
 		});
+
 	};
 	//socket.emit and socket.on must be declared in separate functions
 	socket.on('updateSessions', function(){
@@ -390,6 +401,107 @@ angularApp.controller("InterfaceController",
 	//Get input from form and create new JSON object for idea
 	//Post JSON object to append to the "ideas" array in the relevant document
 	//Append JSON object to allSessions's ideas array and call socket emit to update in real time
+	
+
+
+	$scope.showRefrence = function(idea)
+	{
+		var testIdea = angular.copy(idea);
+		var myPromt = testIdea.ID.split('.');
+		var myCurrentPromt = myPromt[1];
+		var cPrompt = $scope.allData.prompts[myCurrentPromt - 1];
+
+		//console.log (cPrompt.ideas.length);
+		//var temperory= testIdea.refrence.replace("[",",");
+		//var temp= temperory.replace("]",",");
+		
+		var refrenceArray = testIdea.refrence.split(/[\s,\[\]]+/);
+		//console.log(refrenceArray);
+
+		
+		for (var i =0; i< refrenceArray.length-1 ; i=i+2) {
+			for (var j = 0; j< cPrompt.ideas.length ; j++) {
+				if(cPrompt.ideas[j].name==refrenceArray[i] && cPrompt.ideas[j].index == refrenceArray[i+1])
+					cPrompt.ideas[j].refrenced=1;
+				
+			};
+		};
+
+	};
+
+
+
+
+
+	$scope.resetRefrence = function(idea)
+	{
+		var testIdea = angular.copy(idea);
+		var myPromt = testIdea.ID.split('.');
+		var myCurrentPromt = myPromt[1];
+		var cPrompt = $scope.allData.prompts[myCurrentPromt - 1];
+		
+		
+		for (var i = cPrompt.ideas.length - 1; i >= 0; i--) {
+			
+				cPrompt.ideas[i].refrenced=0;
+			
+		}
+	};
+
+	// sending refrences from idea panel to NewIdea panel
+	$scope.sendRefrence = function(idea){
+		console.log($scope.newIdeaRefrence);
+		var testIdea = angular.copy(idea);
+		//console.log(testIdea.ID);
+		var authorNumber = 0;
+		var myPromt = testIdea.ID.split('.');
+		var myCurrentPromt = myPromt[1];
+		var cPromt = $scope.allData.prompts[myCurrentPromt-1];
+
+
+		var refrenceArray = $scope.newIdeaRefrence.split(/[\s,\[\]]+/);
+		
+
+
+		var count=0;
+		//checking for refrences and see if they alredy exist
+		for (var i = 0; i <refrenceArray.length-1; i=i+2) {
+			if(refrenceArray[i]==testIdea.name && refrenceArray[i+1]==testIdea.index)
+				count++;
+
+		}
+		if (count==0){
+			if ($scope.newIdeaRefrence == ""){
+					$scope.newIdeaRefrence =testIdea.name + "["+testIdea.index+"]" ;
+		 		}
+		 	else 
+		 		$scope.newIdeaRefrence = $scope.newIdeaRefrence +","+ testIdea.name + "["+testIdea.index+"]";
+		 	
+
+			
+		}
+		console.log($scope.newIdeaRefrence);
+		
+		
+		 
+		
+	};
+
+	//editing input text for refrences
+	$scope.editRefrence = function(newrefrence){
+		$scope.newIdeaRefrence=newrefrence;
+		
+		console.log("change");
+		//var test= $scope.newIdeaRefrence;
+		console.log($scope.newIdeaRefrence);
+		//console.log($scope.newIdeaRefrence);
+		
+
+
+		
+	};
+	
+
 	$scope.addIdea = function(InputtedIdea){
 		var newIdea = angular.copy(InputtedIdea);
 		console.log(newIdea);
@@ -412,6 +524,7 @@ angularApp.controller("InterfaceController",
 		}
 
 		$("#newIdea_frm")[0].reset();
+		
 		//console.log(newIdea.ID);
 		//console.log(typeof(newIdea.ID));
 		var incomingID = newIdea.ID;
@@ -422,16 +535,32 @@ angularApp.controller("InterfaceController",
 		console.log("***");
 		console.log(promptID);
 		console.log($scope.allData.prompts[promptID]);
+		var authorNumber = 1;
+		
+
+		for (var i = 0; i < cPrompt.ideas.length ; i++) {
+			console.log(cPrompt.ideas[i].name);
+			if(newIdea.name == cPrompt.ideas[i].name)
+				 authorNumber++;
+		};
+
 
 		var ideaID = cPrompt.ideas.length + 1;
 		var fullNewIdea = {
 			"ID": incomingID + "." + ideaID,
 			"name": newIdea.name,
+			"index": authorNumber,
 			"time": Date.now(),
 			"contentType": newIdea.contentType,
 			"content": newIdea.content,
+			"refrence":$scope.newIdeaRefrence,
 			"likes":0,
 		};
+		console.log(fullNewIdea.index);
+
+		$scope.newIdeaRefrence = "";
+			
+		
 
 		//console.log(fullNewIdea);
 
@@ -466,6 +595,7 @@ angularApp.controller("InterfaceController",
 	//Iterate through all ideas and change the value of $scope.allData.ideas[i].likes 
 	//to display the new value without refreshing the page
 	//Call socket emit to update in real time
+	
 	$scope.newLike = function(incomingID) { 
 		console.log("CLIENT LIKING IDEA: " + incomingID);
 	
@@ -473,9 +603,7 @@ angularApp.controller("InterfaceController",
 		var sessionID = Number(IDArray[0]);
 		var promptID = Number(IDArray[1]);
 		var ideaID = Number(IDArray[2]);
-		/*console.log('session ID: ' + sessionID);
-		console.log('promptID: ' + promptID);
-		console.log('ideaID: ' + ideaID);*/
+		
 
 		var promptIndex = promptID - 1;
 		var ideaIndex = ideaID - 1;
@@ -506,7 +634,7 @@ angularApp.controller("InterfaceController",
 			$http.get('/updateLike/'+receivedIdea).then(function(response){
 				var cIdea = $scope.allData.prompts[promptIndex].ideas[ideaIndex];
 				cIdea.likes = response.data;
-			})
+			});
 	});
 
 	socket.on('error', function (err) {
@@ -550,5 +678,6 @@ angularApp.factory('socket', function ($rootScope) {
 socket.on('init', function(){
 	//console.log('socket on init');
 });
+
 
 
