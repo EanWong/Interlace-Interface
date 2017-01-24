@@ -54,12 +54,14 @@ angularApp.controller("InterfaceController",
 
     //Get current document's information
 	$http.get('/list').then(function(response){
+		console.log("Inside /list");
 		$scope.allData = response.data;
 
 	});
 
 	//Get all mongoDB documents' information
-	$http.get('/getAllSessionData').then(function(response){
+	$http.get('/api2/sessions').then(function(response){
+
 		$scope.allSessions = response.data;
 
 		var visibleSessionsArray = [];
@@ -75,22 +77,34 @@ angularApp.controller("InterfaceController",
 //Functions for editing sessions
 	//Archive relevant document by setting "visible" attribute to false
 	$scope.archiveSession = function(inputtedSession){
-		$http.post('/removeSession',inputtedSession).then(function(response){
-			($scope.allSessions) = (response.data);
+
+		var sessionID = inputtedSession._id;
+		var body = {};
+		body["edits"] = {"visible" : false}
+
+		$http.post('/api2/sessions/' + sessionID, body).then(function(response){
+			console.log("response of archiving a session");
+			console.log(response.data);
+			//($scope.allSessions) = (response.data);
 
 			//Update all clients
-			socket.emit('updateSessions');
+			//socket.emit('updateSessions');
 		});
 	};
 
 	//Restore relevant document by setting "visible" attribute to true
 	$scope.restoreSession = function(inputtedSession){
-		$http.post('/restoreSession',inputtedSession).then(function(response){
-			//Receiving new session and pushing to sessions array
-			($scope.allSessions) = (response.data);
+		var sessionID = inputtedSession._id;
+		var body = {};
+		body["edits"] = {"visible" : true}
+
+		$http.post('/api2/sessions/' + sessionID, body).then(function(response){
+			console.log("response of archiving a session");
+			console.log(response.data);
+			//($scope.allSessions) = (response.data);
 
 			//Update all clients
-			socket.emit('updateSessions');
+			//socket.emit('updateSessions');
 		});
 	};
 
