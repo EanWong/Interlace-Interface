@@ -165,8 +165,8 @@ router.route('/sessions/:sessionID/prompts')
       if (err) {
         res.json(err);
       } else {
-        add_prompt(prompt_data, function(err, promptID) {
-          res.json({"promptID":promptID});
+        add_prompt(prompt_data, function(err, promptID, prompt) {
+          res.json({"promptID":promptID, prompt:prompt});
         })
       }
 
@@ -396,7 +396,7 @@ function add_prompt(prompt_data, cb) {
 		      console.log(result);
 		      var promptIndex = result.value.prompts.length - 1;
           db.close();
-		      cb(err, promptIndex);
+		      cb(err, promptIndex, prompt);
 		    });
   	});
 }

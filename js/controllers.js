@@ -25,8 +25,9 @@
 
  */
 
-
 var angularApp = angular.module("myApp", ['ngRoute']);
+
+
 
 console.log("starting angular app");
 
@@ -36,7 +37,51 @@ angularApp.controller("InterfaceController",
 	function($scope,$http, socket, $route, $routeParams, $location, $window)
 {    
 
-//Setting scope variables, general set-up
+	/* 1/25/2017 Ean's addition to handle when a session is provided by the server */
+
+	$scope.currentSessionID = $('h1#sessionID').text();
+	if ($scope.currentSessionID == '') {
+		
+		console.log("No session defined");
+
+		//Get all mongoDB documents' information
+		$http.get('/api2/sessions').then(function(response){
+
+			$scope.allSessions = response.data;
+
+			var visibleSessionsArray = [];
+			for (var i = 0; i<response.data.length; i++){
+				if (response.data[i].visible){
+					visibleSessionsArray.push(response.data[i]);
+				}
+			} 
+			$scope.visibleSessions = visibleSessionsArray;
+		});
+
+
+	} else {
+
+		console.log("Session defined");
+
+	    //Get current session information
+		$http.get('/api2/sessions/' + $scope.currentSessionID + '/prompts').then(function(response){
+			console.log("Inside /api2/sessions/:id/prompts");
+			console.log(response);
+			$scope.allData = {prompts:response.data};
+		});
+
+
+	}
+
+	/* end of ean's addition */
+
+	//Setting scope variables, general set-up
+
+	$scope.$route = $route;
+	$scope.$location = $location;
+    $scope.$routeParams = $routeParams;
+
+	console.log("Starting controller");
 	//var arrayRefrences = [];
 	$scope.newIdeaRefrence = "";
 	//$scope.IdeaRefrence="";
@@ -45,34 +90,6 @@ angularApp.controller("InterfaceController",
 		$scope.id=ideaaaa;
         console.log($scope.id);
     }
-
-	var vm = this;
-
-	$scope.$route = $route;
-	$scope.$location = $location;
-    $scope.$routeParams = $routeParams;
-
-    //Get current document's information
-	$http.get('/list').then(function(response){
-		console.log("Inside /list");
-		$scope.allData = response.data;
-
-	});
-
-	//Get all mongoDB documents' information
-	$http.get('/api2/sessions').then(function(response){
-
-		$scope.allSessions = response.data;
-
-		var visibleSessionsArray = [];
-		for (var i = 0; i<response.data.length; i++){
-			if (response.data[i].visible){
-				visibleSessionsArray.push(response.data[i]);
-			}
-		} 
-		$scope.visibleSessions = visibleSessionsArray;
-	});
-
 
 //Functions for editing sessions
 	//Archive relevant document by setting "visible" attribute to false
@@ -140,7 +157,7 @@ angularApp.controller("InterfaceController",
 			return;
 		}
 		
-		//Create full session (with all attributes) to be inputted in database
+		//Create full session (with all attributes) to be input in database
 		var fullNewSession = {
 			//"sessionID":$scope.allSessions.length + 1,
 			"title":newSession.title,
@@ -214,11 +231,15 @@ angularApp.controller("InterfaceController",
 
 	//Set current session, 1/24/17 will eventually need to be changed to allow better for cookies
 	$scope.useSession = function(inputtedSession){
-
+		//this.currentSession = inputtedSession._id;
 		console.log("useSession enabled");
 		console.log(inputtedSession);
-		$http.post('/setSession',inputtedSession).then(function(response){
-		});
+		console.log($window.location.replace('/views/sessions/' + inputtedSession._id));
+		//location('/views/sessions/' + inputtedSession._id);
+
+		/*$http.post('/setSession', inputtedSession).then(function(response){
+		});*/
+		
 	};
 
 	//Search for session by title
@@ -281,6 +302,11 @@ angularApp.controller("InterfaceController",
 	//If prompt is not already listed within this document, append new prompt to allData.prompts array
 	//Call socket emit to update in real time
 	$scope.addPrompt = function(inputtedPrompt){
+		console.log("Adding prompt:");
+		console.log(inputtedPrompt);
+
+		console.log($scope);
+
 		$scope.showErrorAddNewPrompt = false;
 		if ((inputtedPrompt == "") || typeof(inputtedPrompt)=="undefined"){
 			$scope.showErrorAddNewPrompt = true;
@@ -289,14 +315,35 @@ angularApp.controller("InterfaceController",
 		}
 
 		$("#newPrompt_frm")[0].reset();
-		var currentSessionID = $scope.allData.sessionID;
+
+		// Create prompt
+		//Create full session (with all attributes) to be inputted in database
+		var fullNewPrompt = {
+			"text":inputtedPrompt,
+		};
+
+		var sessionID = $scope.currentSessionID;
+
+		$http.post('/api2/sessions/' + sessionID + '/prompts', fullNewPrompt).then(function(response) {
+			
+			//Error handling?
+			var promptID = response.data.promptID;
+			var prompt = response.data.prompt;
+
+			console.log(prompt);
+			//Update all clients
+			socket.emit('updatePrompts');
+		});	
+
+/*		var currentSessionID = $scope.allData.sessionID;
 		var currentPromptNumber = $scope.allData.prompts.length + 1;
 		var fullNewPrompt = {
 			"promptID": currentSessionID + "." + currentPromptNumber,
 			"text":inputtedPrompt,
 			"ideas":[],
 		};
-
+*/
+/*
 		$http.post('/addNewPrompt',fullNewPrompt).then(function(response){
 			if (response.data == "!ERROR!"){
 				$scope.showErrorAddNewPrompt = true;
@@ -311,14 +358,15 @@ angularApp.controller("InterfaceController",
 			socket.emit('updatePrompts');
 		}
 		});
+*/
 	};
 	//socket.emit and socket.on must be declared in separate functions
 	socket.on('updatePrompts', function(){
-		$http.get('/updatePrompts/').then(function(response){
-			//console.log(response.data);
+		$http.get('/api2/sessions/' + $scope.currentSessionID + '/prompts').then(function(response){
 			$scope.allData.prompts = response.data;
 		})
 	});
+
 
 	//Get input from form and search for prompt text within a session
 	//If no prompt within this session can be found, display error message

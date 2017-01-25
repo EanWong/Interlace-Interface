@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/angular-material-icons/0.5.0/angular-material-icons.min.js"></script>
+	<meta charset="UTF-8">
+	<title>Interlace Interface</title>
+	<link rel="stylesheet" type="text/css" href="/styles.css"></link>
+
+	<link href='http://fonts.googleapis.com/css?family=PT+Serif:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+
+	<link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+
+	<base href="/" />
+	
+</head>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.4/angular-route.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/X.Y.Z/angular-route.js"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/X.Y.Z/angular-resource.js"></script>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script src="js/controllers.js" type="text/javascript" ></script>
+
+<body ng-controller="InterfaceController">
+
+	<div class="header">
+	<md-button class="md-icon-button">
+    	<div class = "homeButton" onclick="location.href='/'" ><i class="material-icons md-36">home</i><p>Home</p></div>
+    	<div class = "addIdeaButton" onclick="location.href='/addIdea'" ><i class="material-icons md-36">add_circle_outline</i><p>Add Idea</p></div>
+	</md-button>
+		<h1 id="sessionID"><%= sessionID %></h1>
+      	<h1>{{allData.title}}</h1>
+      	<h3 ng-if=typeof(allData.date)=="String"> {{allData.date}}</h3>
+     	<h3>{{allData.date | date:'MM-dd-yyyy'}}</h3>
+      	<h3>{{allData.teacherName}}</h3>
+   
+    </div>
+
+    <div class="ideaPanel">
+    	<br>
+	   		<div ng-repeat="prompt in allData.prompts" class = "promptBox">
+				<h2 ng-if=(prompt.text).slice(-1)!="=" id = "ideaName"> {{prompt.text}}</h2>
+				<img ng-if=(prompt.text).slice(-1)=="=" data-ng-src = {{prompt.text}}>
+				<br>
+					<div ng-repeat="idea in prompt.ideas" class = "ideaBox" ng-style="idea.refrenced === 0 && {'background-color': 'lightblue'} || idea.refrenced === 1 && {'background-color': 'green'}">
+						<h2 id = "ideaName"> {{idea.name}}</h2>
+						<p class = "likes" ng-click="newLike(idea.ID)">+ {{ idea.likes }} </p>
+						<input type="button" id="submit" value="Refrence"  ng-click= "sendRefrence(idea)"/>
+						<!--Load textcontent -->
+							<div class = "contentBox" ng-if=idea.contentType=="text">
+								<p id = "ideaText"> {{idea.content}} </p>
+							</div>
+						<!--Load image content -->
+							<div class = "contentBox" ng-if=idea.contentType=="image">
+								<img data-ng-src={{idea.content}} style="max-width:100%; max-height:100%">
+							</div>
+							<div class = "refrenceBox" style="overflow: scroll ;max-height: 250px;font-size:11px;" >
+								 <p id="ideaRefrenced" ng-mouseover = "showRefrence(idea)" ng-mouseleave = "resetRefrence(idea)">{{"Refrence:" + idea.refrence}} <p/>
+
+									
+							</div>
+
+						<p id = "ideaTime"> {{idea.time | date:'MM-dd-yyyy HH:mm'}} </p>
+					</div>
+					<div class = "newIdeaBox">
+						<h2 id = "ideaName"> Add New Idea </h2>
+							<form name="newIdea_frm" id = "newIdea_frm" novalidate class="simple-form">
+								<input type="text" ng-model="newIdea.name" id = "ideaName" placeholder="Name" /><br />
+								<br>
+							<p>What idea type would you like to share?</p>
+					      		<label for="textButton">Text</label>
+					      			<input id="textButton" type="radio" ng-model="newIdea.contentType" value="text">
+					      		<br />
+					     		 <label for="imageButton">Image</label>
+					      			<input id="imageButton" type="radio" ng-model="newIdea.contentType" value="image">
+
+					    	<div>
+					      		<input type="text" ng-model="newIdea.content" id = "ideaName" placeholder="Idea content here" ng-show="newIdea.contentType == 'text'"/><br />
+					      		<input type="url" ng-model="newIdea.content" id = "ideaName" placeholder="Image url here" ng-show="newIdea.contentType == 'image'"/><br />
+					    	</div>
+					    	<div ><input type = "text" ng-model="$parent.newIdeaRefrence" id="ideaRefrence" placeholder="Refrences here" ng-change ="editRefrence(newIdeaRefrence)"/></div>
+
+					    	<input type="hidden" ng-model="newIdea.promptID" value="{{prompt.promptID}}" ng-init="newIdea.ID=prompt.promptID"/>
+					    	
+					    	<input type="submit" ng-show="newIdea_frm.$dirty" ng-click="addIdea(newIdea)" value="Save" />
+					    	<input type='text' ng-model='id' ng-change="logId(id)">
+  							 <!--<button ng-click="logId(id)">Log ID</button>-->
+					    	</form>
+					    	<br>
+					    	<div class = "results" ng-show = "showAddNewIdea">
+								{{addNewIdeaResponse}}
+							</div>
+
+					</div>	
+					
+			</div>
+
+			<br>
+			<br>
+			<br>
+
+			<div class = "newPromptBox">
+			<h2 id = "ideaName"> Add New Prompt </h2>
+					<form id = "newPrompt_frm" name = "newPrompt_frm" novalidate class="simple-form">
+						<input type="text" ng-model="newPrompttext" id = "ideaName" placeholder="New Prompt Text"/><br />
+						
+						<input type="submit" ng-show="newPrompt_frm.$dirty" ng-click="addPrompt(newPrompttext)" value="Save" />
+					</form>
+					<div class = "results" ng-show = "showErrorAddNewPrompt">
+						{{errorAddNewPromptResponse}}
+					</div>
+			</div>
+
+			
+			<div class = "newPromptBox">
+			<h2 id = "ideaName"> Get Prompt ID </h2>
+				<form id = "getPrompt_frm" name = "getPrompt_frm" novalidate class="simple-form">
+					<input type="text" ng-model="qPrompt.qText" id = "ideaName" placeholder="Insert prompt text"/><br />
+
+					<input type="text" ng-model="qPrompt.qSessionID" id = "sessionID" placeholder="Insert session ID"/><br />
+					
+					<input type="submit" ng-click="getPromptID(qPrompt)" value="Save" />
+				</form>
+
+				<p ng-show = "showGetPromptIDResponse">The promptID of your search "{{qPrompt.qText}}" is {{getPromptIDResponse}} </p>
+				<p ng-show = "showErrorGetPromptIDResponse">{{errorGetPromptIDResponse}} </p>
+			</div>
+
+			
+    </div>
+
+
+</body>
+</html>
+
+	
+
+	    	
+	

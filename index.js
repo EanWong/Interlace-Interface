@@ -14,16 +14,19 @@ var path = require('path');
 var bodyParser = require('body-parser');
 var util = require('util');
 var api2 = require('./routes/api2');
+var views = require('./routes/views');
 
 expressApp.use(bodyParser.json());
 expressApp.use(bodyParser.urlencoded({
   extended: true
 }));
+expressApp.set('view engine', 'ejs');
 
 expressApp.use(express.static(path.join(__dirname, '/public'))); //Add CSS
 expressApp.use('/js', express.static(path.join(__dirname,'/js'))); //Add controller, data
 expressApp.use('/lib', express.static(path.join(__dirname,'/lib'))); //Add Angular and socket
 expressApp.use('/api2',api2);
+expressApp.use('/views',views);
 //Connect with socket.io between Angular App (controllers.js) and Express App (index.js)
 io.on('connection', function(socket){
   socket.on('updateAll', function(ideaObject){
@@ -221,6 +224,7 @@ var currentSession = "57a8a1ca7909460733f208b2";
     var sessionID = req.body._id;
     currentSession = sessionID;
     console.log("Now using session " + currentSession);
+    res.json(sessionID);
   });
 
   expressApp.get('/searchForSession/:id', function(req,res){

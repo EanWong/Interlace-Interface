@@ -55,7 +55,9 @@
 			<h2 id = "ideaText" ng-if=typeof(item.date)=="String"> {{item.date}}</h2>
 			<h2 id = "ideaText" > {{item.date | date:'MM-dd-yyyy' }}</h2>
 			<br>
-			<input type="button" class = "useSessionButton" onclick="location.href='/index'" ng-click="useSession(item)" value="Use Session" />
+	<!--		<input type="button" class = "useSessionButton" onclick="location.href='/index'" ng-click="useSession(item)" value="Use Session" />
+	-->
+			<input type="button" class = "useSessionButton" ng-click="useSession(item)" value="Use Session" />
 
 		</div>
 		<div ng-repeat="item in allSessions | filter:{visible:false}" class = "invisibleSessionBox">
