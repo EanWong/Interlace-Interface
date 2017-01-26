@@ -64,10 +64,11 @@ angularApp.controller("InterfaceController",
 		console.log("Session defined");
 
 	    //Get current session information
-		$http.get('/api2/sessions/' + $scope.currentSessionID + '/prompts').then(function(response){
-			console.log("Inside /api2/sessions/:id/prompts");
+		$http.get('/api2/sessions/' + $scope.currentSessionID).then(function(response){
+			console.log("Inside /api2/sessions/:id/");
 			console.log(response);
-			$scope.allData = {prompts:response.data};
+			$scope.allData = {prompts: response.data[0].prompts};
+			//$scope.allData = {prompts:response.data};
 		});
 
 
@@ -332,7 +333,7 @@ angularApp.controller("InterfaceController",
 
 			console.log(prompt);
 			//Update all clients
-			socket.emit('updatePrompts');
+			socket.emit('updatePrompts', promptID);
 		});	
 
 /*		var currentSessionID = $scope.allData.sessionID;
@@ -361,9 +362,13 @@ angularApp.controller("InterfaceController",
 */
 	};
 	//socket.emit and socket.on must be declared in separate functions
-	socket.on('updatePrompts', function(){
-		$http.get('/api2/sessions/' + $scope.currentSessionID + '/prompts').then(function(response){
-			$scope.allData.prompts = response.data;
+	socket.on('updatePrompts', function(promptIndex){
+		$http.get('/api2/sessions/' + $scope.currentSessionID + '/prompts/' + promptIndex).then(function(response){
+			console.log(response);
+			console.log($scope.allData.prompts);
+			console.log(promptIndex);
+			$scope.allData.prompts.splice(promptIndex,0,response.data[0].prompt);
+			//$scope.allData.prompts[promptIndex] = response.data[0].prompt;
 		})
 	});
 
@@ -483,9 +488,9 @@ angularApp.controller("InterfaceController",
 		});
 	};
 	//socket.emit and socket.on must be declared in separate functions
-	socket.on('updateIdeas', function(incomingPrompt){
+	socket.on('updateIdeas', function(promptIndex){
 		console.log('updating ideas on prompt ' + incomingPrompt);
-			$http.get('/updateIdeas/'+incomingPrompt).then(function(response){
+/*			$http.get('/updateIdeas/'+incomingPrompt).then(function(response){
 				console.log('receiving ' + response.data);
 				//console.log('**');
 				//console.log($scope.allData.prompts[incomingPrompt-1]);
@@ -495,7 +500,7 @@ angularApp.controller("InterfaceController",
 				($scope.allData.prompts[promptID-1].ideas) = response.data;
 				//($scope.allData.ideas) = response.data;
 			})
-	});
+*/	});
 
 	//Get input from form and create new JSON object for idea
 	//Post JSON object to append to the "ideas" array in the relevant document
@@ -624,8 +629,43 @@ angularApp.controller("InterfaceController",
 
 		$("#newIdea_frm")[0].reset();
 		
+
+		//Ean's addition for new API
+
+		var fullNewIdea = {
+			"name": newIdea.name,
+			"contentType": newIdea.contentType,
+			"content": newIdea.content
+		};
+		var sessionID = $scope.currentSessionID;
+		var promptIndex = newIdea.promptIndex;
+
+		$http.post('/api2/sessions/' + sessionID + '/prompts/' + promptIndex + '/ideas/', fullNewIdea).then(function(response){
+			//Receiving new idea and pushing to ideas array of current prompt
+			console.log(response.data);
+			//Update all clients
+			socket.emit('updateIdeas', promptIndex);
+		});
+
+		//End Ean's addition
+
+
+		/*
+		var ideaID = cPrompt.ideas.length + 1;
+		var fullNewIdea = {
+			"ID": incomingID + "." + ideaID,
+			"name": newIdea.name,
+			"index": authorNumber,
+			"time": Date.now(),
+			"contentType": newIdea.contentType,
+			"content": newIdea.content,
+			"refrence":$scope.newIdeaRefrence,
+			"likes":0,
+		};*/
+
 		//console.log(newIdea.ID);
 		//console.log(typeof(newIdea.ID));
+		/*
 		var incomingID = newIdea.ID;
 		var IDArray = String(newIdea.ID).split('.');
 		console.log('ID Array: ' + IDArray);
@@ -674,11 +714,24 @@ angularApp.controller("InterfaceController",
 			$scope.showAddRemoteIdea = true;
 			$scope.addRemoteIdeaResponse = "Your idea has been submitted."
 		});
+
+		*/
 	};
 	//socket.emit and socket.on must be declared in separate functions
-	socket.on('updateIdeas', function(incomingPrompt){
-		console.log('calling update on prompt ' + incomingPrompt);
-			$http.get('/updateIdeas/'+incomingPrompt).then(function(response){
+	socket.on('updateIdeas', function(promptIndex){
+		console.log('calling update on prompt ' + promptIndex);
+
+		console.log($scope.currentSessionID);
+		var sessionID = $scope.currentSessionID;
+
+		$http.get('/api2/sessions/' + sessionID + '/prompts/' + promptIndex).then(function(response) {
+			console.log("Updated prompt info");
+			console.log(response);
+			var updatedIdeas = response.data[0].prompt.ideas;
+			$scope.allData.prompts[promptIndex].ideas = updatedIdeas;
+		});
+/*
+			$http.get('/api2/sessions/' +/'+incomingPrompt).then(function(response){
 				//console.log(response.data);
 				console.log('**');
 				var IDArray = String(incomingPrompt).split(".");
@@ -688,6 +741,7 @@ angularApp.controller("InterfaceController",
 				($scope.allData.prompts[promptIndex].ideas) = response.data;
 				
 			})
+*/
 	});
 
 	//Like idea based on ideaID

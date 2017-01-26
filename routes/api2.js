@@ -74,7 +74,8 @@ router.route('/sessions/:sessionID')
                       "title":1,
                       "teacherName":1,
                       "date":1,
-                      "prompts.text":1
+                      "prompts":1
+                      //"prompts.text":1 //Original API design, hiding lower levels, proved to be not useful
                     };
                 
         coll.aggregate( [

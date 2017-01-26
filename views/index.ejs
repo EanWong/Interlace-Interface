@@ -86,7 +86,7 @@
 					    	</div>
 					    	<div ><input type = "text" ng-model="$parent.newIdeaRefrence" id="ideaRefrence" placeholder="Refrences here" ng-change ="editRefrence(newIdeaRefrence)"/></div>
 
-					    	<input type="hidden" ng-model="newIdea.promptID" value="{{prompt.promptID}}" ng-init="newIdea.ID=prompt.promptID"/>
+					    	<input type="hidden" ng-model="newIdea.promptID" value="{{prompt.promptID}}" ng-init="newIdea.promptIndex=allData.prompts.indexOf(prompt)"/>
 					    	
 					    	<input type="submit" ng-show="newIdea_frm.$dirty" ng-click="addIdea(newIdea)" value="Save" />
 					    	<input type='text' ng-model='id' ng-change="logId(id)">
