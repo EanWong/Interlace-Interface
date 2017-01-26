@@ -34,7 +34,7 @@
     	<div class = "homeButton" onclick="location.href='/'" ><i class="material-icons md-36">home</i><p>Home</p></div>
     	<div class = "addIdeaButton" onclick="location.href='/addIdea'" ><i class="material-icons md-36">add_circle_outline</i><p>Add Idea</p></div>
 	</md-button>
-		<h1 id="sessionID"><%= sessionID %></h1>
+		<input type= "hidden" id="sessionID" value="<%=sessionID%>"></input>
       	<h1>{{allData.title}}</h1>
       	<h3 ng-if=typeof(allData.date)=="String"> {{allData.date}}</h3>
      	<h3>{{allData.date | date:'MM-dd-yyyy'}}</h3>
@@ -50,7 +50,7 @@
 				<br>
 					<div ng-repeat="idea in prompt.ideas" class = "ideaBox" ng-style="idea.refrenced === 0 && {'background-color': 'lightblue'} || idea.refrenced === 1 && {'background-color': 'green'}">
 						<h2 id = "ideaName"> {{idea.name}}</h2>
-						<p class = "likes" ng-click="newLike(idea.ID)">+ {{ idea.likes }} </p>
+						<p class = "likes" ng-click="newLike($parent.$index,$index)">+ {{ idea.likes }} </p>
 						<input type="button" id="submit" value="Refrence"  ng-click= "sendRefrence(idea)"/>
 						<!--Load textcontent -->
 							<div class = "contentBox" ng-if=idea.contentType=="text">

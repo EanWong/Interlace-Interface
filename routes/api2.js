@@ -311,7 +311,46 @@ router.route('/sessions/:sessionID/prompts/:promptIndex/ideas/:ideaIndex')
        });
     });
 
+  })
+.post(function(req, res) {
+  MongoClient.connect(url, function(err, db) {
+    assert.equal(null, err);
+
+    var coll = db.collection(currentCollection);
+
+    var sessionID = ObjectId(req.params.sessionID);
+    var promptIndex = req.params.promptIndex;
+    var ideaIndex = req.params.ideaIndex;
+    var edit_reqs = req.body.edits;
+
+    var update = {};
+
+    //Determining what aspects of the idea needs to be updated, could be its own function some day.
+    if (edit_reqs["like"]) {
+      console.log("Like command exists");
+      var like_str = "prompts." + promptIndex + ".ideas." + ideaIndex + ".likes";
+      update.$inc = {};
+      update.$inc[like_str] = 1;
+    } else {
+      console.log("Like command not there");
+    }
+
+    db.collection(currentCollection).findAndModify(
+      {'_id': sessionID},
+      [['_id','asc']],
+      update,
+      {new: true},
+      function(err, object) {
+        if (err){
+            console.warn(err.message);  // returns error if no matching object found
+        }else{
+            res.json(object.value);
+        }
+      });
+
   });
+
+});
 
 function check_session_data(data, cb) {
   var err = null;

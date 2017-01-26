@@ -39,8 +39,8 @@ angularApp.controller("InterfaceController",
 
 	/* 1/25/2017 Ean's addition to handle when a session is provided by the server */
 
-	$scope.currentSessionID = $('h1#sessionID').text();
-	if ($scope.currentSessionID == '') {
+	$scope.currentSessionID = $('input#sessionID').val();
+	if ($scope.currentSessionID == null) {
 		
 		console.log("No session defined");
 
@@ -65,9 +65,8 @@ angularApp.controller("InterfaceController",
 
 	    //Get current session information
 		$http.get('/api2/sessions/' + $scope.currentSessionID).then(function(response){
-			console.log("Inside /api2/sessions/:id/");
-			console.log(response);
 			$scope.allData = {prompts: response.data[0].prompts};
+			$scope.allData["title"] = response.data[0].title;
 			//$scope.allData = {prompts:response.data};
 		});
 
@@ -749,9 +748,30 @@ angularApp.controller("InterfaceController",
 	//to display the new value without refreshing the page
 	//Call socket emit to update in real time
 	
-	$scope.newLike = function(incomingID) { 
-		console.log("CLIENT LIKING IDEA: " + incomingID);
-	
+	$scope.newLike = function(promptIndex, ideaIndex) { 
+		
+		var sessionID = this.currentSessionID;
+
+		var ideaToLike = this.allData.prompts[promptIndex].ideas[ideaIndex];
+		console.log(ideaToLike);
+
+		var like = {"like":1}
+		var body = {};
+		body["edits"] = like;
+
+		console.log(body);
+
+		$http.post('/api2/sessions/' + sessionID + '/prompts/' + promptIndex + '/ideas/' + ideaIndex, body)
+			.then(function(response){
+				console.log(response);
+				data = {};
+				data["promptIndex"] = promptIndex;
+				data["ideaIndex"] = ideaIndex;
+
+				socket.emit('updateLike', data)
+			})
+
+		/*
 		var IDArray = String(incomingID).split(".");
 		var sessionID = Number(IDArray[0]);
 		var promptID = Number(IDArray[1]);
@@ -768,27 +788,30 @@ angularApp.controller("InterfaceController",
 
 			socket.emit('updateLike', incomingID);
 		});
+*/
 	};
 
 	//Show real-time updates of likes by updating the scope value of all other windows
 	//Update scope value to current value stored in database 
-	socket.on('updateLike', function(receivedIdea){
-		var IDArray = String(receivedIdea).split(".");
-		var sessionID = Number(IDArray[0]);
-		var promptID = Number(IDArray[1]);
-		var ideaID = Number(IDArray[2]);
-		/*console.log('session ID: ' + sessionID);
-		console.log('promptID: ' + promptID);
-		console.log('ideaID: ' + ideaID);*/
+	socket.on('updateLike', function(data){
+		var sessionID = $scope.currentSessionID;
+		var promptIndex = data.promptIndex;
+		var ideaIndex = data.ideaIndex
 
-		var promptIndex = promptID - 1;
+		$http.get('/api2/sessions/' + sessionID + '/prompts/' + promptIndex + '/ideas/').then(function(response) {
+			console.log(response);
+			$scope.allData.prompts[promptIndex].ideas = response.data[0].ideas;
+
+		});
+
+/*		var promptIndex = promptID - 1;
 		var ideaIndex = ideaID - 1;
 
 			$http.get('/updateLike/'+receivedIdea).then(function(response){
 				var cIdea = $scope.allData.prompts[promptIndex].ideas[ideaIndex];
 				cIdea.likes = response.data;
 			});
-	});
+*/	});
 
 	socket.on('error', function (err) {
     	console.log("!error! " + err);
