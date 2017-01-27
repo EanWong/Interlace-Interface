@@ -51,7 +51,7 @@
 					<div ng-repeat="idea in prompt.ideas" class = "ideaBox" ng-style="idea.refrenced === 0 && {'background-color': 'lightblue'} || idea.refrenced === 1 && {'background-color': 'green'}">
 						<h2 id = "ideaName"> {{idea.name}}</h2>
 						<p class = "likes" ng-click="newLike($parent.$index,$index)">+ {{ idea.likes }} </p>
-						<input type="button" id="submit" value="Refrence"  ng-click= "sendRefrence(idea)"/>
+						<input type="button" id="submit" value="Refrence"  ng-click= "sendRefrence($parent.$index, $index)"/>
 						<!--Load textcontent -->
 							<div class = "contentBox" ng-if=idea.contentType=="text">
 								<p id = "ideaText"> {{idea.content}} </p>
@@ -61,7 +61,8 @@
 								<img data-ng-src={{idea.content}} style="max-width:100%; max-height:100%">
 							</div>
 							<div class = "refrenceBox" style="overflow: scroll ;max-height: 250px;font-size:11px;" >
-								 <p id="ideaRefrenced" ng-mouseover = "showRefrence(idea)" ng-mouseleave = "resetRefrence(idea)">{{"Refrence:" + idea.refrence}} <p/>
+								 <p id="ideaRefrenced" ng-mouseover = "showRefrence(idea)" ng-mouseleave = "resetRefrence(idea)">References:<p/>
+								 <div ng-repeat="ref in idea.references">{{ref.promptIndex + '.' + ref.ideaIndex}}</div>
 
 									
 							</div>
@@ -84,12 +85,16 @@
 					      		<input type="text" ng-model="newIdea.content" id = "ideaName" placeholder="Idea content here" ng-show="newIdea.contentType == 'text'"/><br />
 					      		<input type="url" ng-model="newIdea.content" id = "ideaName" placeholder="Image url here" ng-show="newIdea.contentType == 'image'"/><br />
 					    	</div>
-					    	<div ><input type = "text" ng-model="$parent.newIdeaRefrence" id="ideaRefrence" placeholder="Refrences here" ng-change ="editRefrence(newIdeaRefrence)"/></div>
+
+					    	<!--<div ><input type = "text" ng-model="$parent.newIdeaRefrence" id="ideaRefrence" placeholder="Refrences here" ng-change ="editRefrence(newIdeaRefrence)"/></div>-->
+					    	<input type="text" ng-repeat="ref in $parent.arrayRefrences" value="{{ref.promptIndex + '.' + ref.ideaIndex}}">
+				
+					    	</input>
 
 					    	<input type="hidden" ng-model="newIdea.promptID" value="{{prompt.promptID}}" ng-init="newIdea.promptIndex=allData.prompts.indexOf(prompt)"/>
 					    	
 					    	<input type="submit" ng-show="newIdea_frm.$dirty" ng-click="addIdea(newIdea)" value="Save" />
-					    	<input type='text' ng-model='id' ng-change="logId(id)">
+					    	<!--<input type='text' ng-model='id' ng-change="logId(id)">-->
   							 <!--<button ng-click="logId(id)">Log ID</button>-->
 					    	</form>
 					    	<br>

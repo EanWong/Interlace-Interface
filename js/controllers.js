@@ -82,7 +82,7 @@ angularApp.controller("InterfaceController",
     $scope.$routeParams = $routeParams;
 
 	console.log("Starting controller");
-	//var arrayRefrences = [];
+	$scope.arrayRefrences = [];
 	$scope.newIdeaRefrence = "";
 	//$scope.IdeaRefrence="";
 	
@@ -552,12 +552,45 @@ angularApp.controller("InterfaceController",
 	};
 
 	// sending refrences from idea panel to NewIdea panel
-	$scope.sendRefrence = function(idea){
+	$scope.sendRefrence = function(promptIndex, ideaIndex){
+		console.log($scope.arrayRefrences);
 		console.log($scope.newIdeaRefrence);
-		var testIdea = angular.copy(idea);
+		//console.log(idea);
+		//var testIdea = angular.copy(idea);
+
+		//Ean's addition
+		//Create reference
+		var sessionID = $scope.currentSessionID;
+		var reference = {"sessionID": sessionID, "promptIndex":promptIndex, "ideaIndex":ideaIndex};
+
+		//Logic for adding reference to reference pool | Ensures uniqueness
+		var referenceExists = false;
+		for (var i = 0; i < this.arrayRefrences.length; i++) {
+			var currPromptIndex = this.arrayRefrences[i].promptIndex;
+			var currIdeaIndex = this.arrayRefrences[i].ideaIndex;
+			var currSessionID = this.arrayRefrences[i].sessionID;
+
+			if (reference.sessionID == currSessionID && reference.promptIndex == currPromptIndex && reference.ideaIndex == currIdeaIndex) {
+				referenceExists = true;
+			}
+		}
+
+		if (!referenceExists) {
+			console.log("Adding new reference to pool")
+			this.arrayRefrences.push(reference);
+		} else {
+			console.log("Already exists");
+		}
+
+
+		console.log(this.arrayRefrences);
+		//End of Ean's addition
+
+
+
 		//console.log(testIdea.ID);
 		var authorNumber = 0;
-		var myPromt = testIdea.ID.split('.');
+		/*var myPromt = testIdea.ID.split('.');
 		var myCurrentPromt = myPromt[1];
 		var cPromt = $scope.allData.prompts[myCurrentPromt-1];
 
@@ -585,7 +618,7 @@ angularApp.controller("InterfaceController",
 		}
 		console.log($scope.newIdeaRefrence);
 		
-		
+		*/
 		 
 		
 	};
@@ -634,8 +667,14 @@ angularApp.controller("InterfaceController",
 		var fullNewIdea = {
 			"name": newIdea.name,
 			"contentType": newIdea.contentType,
-			"content": newIdea.content
+			"content": newIdea.content,
+			"references": $scope.arrayRefrences,
+			"likes": 0
 		};
+
+		//Clear reference array
+		$scope.arrayRefrences = [];
+
 		var sessionID = $scope.currentSessionID;
 		var promptIndex = newIdea.promptIndex;
 

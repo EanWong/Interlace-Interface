@@ -467,6 +467,16 @@ function check_idea_data(data, cb) {
   }
   idea_data.content = data.content;
 
+  if (!('likes' in data)) {
+    err.push("Please include your idea's likes.");
+  }
+  idea_data.likes = data.likes;
+
+  if (!('references' in data)) {
+    err.push("Please include your idea's references.");
+  }
+  idea_data.references = data.references;
+
   if (err.length == 0) {
     err = null;
   }
@@ -488,8 +498,8 @@ function add_idea(idea_data, cb) {
     idea.contentType = idea_data.contentType;
     idea.content = idea_data.content;
     idea.time = Date.now();
-    idea['reference'] = [];//hard coded
-    idea['likes'] = 0; // hard coded
+    idea['likes'] = idea_data.likes; 
+    idea['references'] = idea_data.references;
     console.log(idea);
 	    
     var query = {"_id":sessionID};
